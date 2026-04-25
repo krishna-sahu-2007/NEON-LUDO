@@ -1,3 +1,10 @@
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+document.addEventListener("click", () => {
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+}, { once: true });
+
 // ================== GLOBAL SETTINGS ==================
 let isPaused = false;
 let soundEnabled = true;
@@ -9,6 +16,8 @@ bgMusic.volume = 0.4;
 
 // ================== SOUNDS ==================
 const sounds = {
+
+    
     dice: new Audio("sounds/dice.mp3"),
     move: new Audio("sounds/move.mp3"),
     step: new Audio("sounds/step.mp3"),
@@ -16,30 +25,44 @@ const sounds = {
     win: new Audio("sounds/win.mp3")
 };
 
-function playSound(type) {
+let masterVolume = 1;
+
+const slider = document.getElementById("volume-slider");
+
+if (slider) {
+    slider.addEventListener("input", (e) => {
+        masterVolume = parseFloat(e.target.value);
+
+        // 🎨 update slider fill (for neon effect)
+        slider.style.setProperty('--val', (masterVolume * 100) + '%');
+    });
+}
+
+function playSound(type, token = null) {
     if (isPaused || !soundEnabled) return;
     if (!sounds[type]) return;
 
-    const sound = sounds[type].cloneNode();
-    sound.volume = (type === 'step') ? 0.3 : 1;
+    const audio = sounds[type].cloneNode();
 
-    if (type === 'step') {
-        sound.playbackRate = 0.9 + Math.random() * 0.2;
-    }
-
-    sound.play();
-    vibrate(type);
+    audio.volume = (type === 'step' ? 0.8 : 1) * masterVolume;
+    audio.play().catch(() => {});
 }
 
 // ================== VIBRATION ==================
 function vibrate(type) {
     if (!navigator.vibrate || !soundEnabled) return;
 
-    if (type === 'dice') navigator.vibrate(50);
-    else if (type === 'step') navigator.vibrate(10);
-    else if (type === 'move') navigator.vibrate(30);
-    else if (type === 'cut') navigator.vibrate([100, 50, 100]);
-    else if (type === 'win') navigator.vibrate([200, 100, 200, 100, 300]);
+    let intensity = 1;
+
+    // 🎯 stronger when important
+    if (type === 'cut') intensity = 2;
+    if (type === 'win') intensity = 3;
+
+    if (type === 'step') navigator.vibrate(20 * intensity);
+    else if (type === 'move') navigator.vibrate(50 * intensity);
+    else if (type === 'dice') navigator.vibrate([80, 30, 80].map(v => v * intensity));
+    else if (type === 'cut') navigator.vibrate([120, 60, 120].map(v => v * intensity));
+    else if (type === 'win') navigator.vibrate([200, 100, 200, 100, 300].map(v => v * intensity));
 }
 
 // ================== PAUSE ==================
@@ -53,7 +76,9 @@ function togglePause() {
         bgMusic.pause();
     } else {
         pauseScreen.classList.add('hidden');
-        if (soundEnabled) bgMusic.play();
+       document.body.addEventListener('click', () => {
+    if (soundEnabled) bgMusic.play();
+    }, { once: true });
     }
 }
 
@@ -348,26 +373,7 @@ const sleep = ms => new Promise(resolve => {
             }
             const cp = players[turnIndex];
 
-            // 🎲 TRUE RANDOM BASE
-            let rand = Math.random();
-
-            // 🧠 AI gets slight advantage (but not obvious cheating)
-            if (cp.type === 'ai') {
-                if (rand < 0.22) currentDice = 6;       // 🔥 higher chance of 6
-                else if (rand < 0.35) currentDice = 5;  // good move bias
-                else currentDice = Math.floor(Math.random() * 6) + 1;
-
-                // If AI is behind → boost luck
-             const myTokens = tokens.filter(t => t.color === cp.color);
-             const progress = myTokens.reduce((a, t) => a + Math.max(0, t.relPos), 0);
-
-            if (progress < 40) {
-            if (rand < 0.3) currentDice = 6; // more boost when losing
-            }
-            } else {
-                // 🎲 Human = fully random
-                currentDice = Math.floor(Math.random() * 6) + 1;
-            }
+            currentDice = Math.floor(Math.random() * 6) + 1;
             renderDice(currentDice, dots, diceFaces);
             logMsg(`Rolled a ${currentDice}.`);
             await sleep(500);
@@ -504,7 +510,7 @@ const sleep = ms => new Promise(resolve => {
 
             if (t.relPos > 50) t.state = 'home';
 
-            playSound('step');
+            playSound('step', t);
             updateTokenVisuals();
 
             await sleep(180);
