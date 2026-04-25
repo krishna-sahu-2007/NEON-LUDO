@@ -45,20 +45,37 @@ function playSound(type, token = null) {
     const audio = sounds[type].cloneNode();
 
     audio.volume = (type === 'step' ? 0.8 : 1) * masterVolume;
+    audio.volume = (type === 'move' ? 0.9 : 1) * masterVolume;
     audio.play().catch(() => {});
 }
 
 // ================== VIBRATION ==================
 function vibrate(type) {
-    if (!navigator.vibrate) return;
+    if (!("vibrate" in navigator)) return;
 
-    switch(type) {
-        case 'step': navigator.vibrate(50); break;
-        case 'move': navigator.vibrate(70); break;
-        case 'dice': navigator.vibrate([50, 40, 50]); break;
-        case 'cut': navigator.vibrate([100, 50, 100]); break;
-        case 'win': navigator.vibrate([200, 100, 200]); break;
-    }
+    try {
+        switch(type) {
+            case 'step':
+                navigator.vibrate([30, 20, 30]); // light pulse
+                break;
+
+            case 'move':
+                navigator.vibrate([80, 40, 80]); // medium strong
+                break;
+
+            case 'dice':
+                navigator.vibrate([100, 50, 100, 50, 120]); // rolling feel
+                break;
+
+            case 'cut':
+                navigator.vibrate([150, 70, 150]); // 💥 strong hit
+                break;
+
+            case 'win':
+                navigator.vibrate([200, 100, 200, 100, 300]); // 🏆 very strong
+                break;
+        }
+    } catch(e) {}
 }
 
 // ================== PAUSE ==================
@@ -349,12 +366,13 @@ const sleep = ms => new Promise(resolve => {
             } else { logMsg(`Ready to roll.`); }
         }
 
-        function handleDiceClick() {
-    if (navigator.vibrate) navigator.vibrate(50); // ✅ direct user action
-    if (state !== 'waiting') return;
-    document.getElementById('dice-btn').disabled = true;
-    rollDiceLogic();
-    }
+            function handleDiceClick() {
+                vibrate('dice'); // ✅ FIXED (was manual vibrate before)
+
+                if (state !== 'waiting') return;
+                document.getElementById('dice-btn').disabled = true;
+                rollDiceLogic();
+            }
 
         async function rollDiceLogic() {
             state = 'rolling';
@@ -413,16 +431,21 @@ const sleep = ms => new Promise(resolve => {
         }
 
         document.getElementById('tokens-layer').addEventListener('click', (e) => {
-            if (state !== 'selecting') return;
-            let el = e.target.closest('.token');
-            if (!el) return;
-            let t = tokens.find(x => x.id === el.id.replace('token-', ''));
-            let valid = getValidTokens(players[turnIndex]);
-            if (valid.includes(t)) {
-                valid.forEach(vt => vt.el.classList.remove('highlight'));
-                executeMove(t);
-            }
-        });
+    if (state !== 'selecting') return;
+
+    let el = e.target.closest('.token');
+    if (!el) return;
+
+    vibrate('move'); // ✅ USER TOUCH → works perfectly
+
+    let t = tokens.find(x => x.id === el.id.replace('token-', ''));
+    let valid = getValidTokens(players[turnIndex]);
+
+    if (valid.includes(t)) {
+        valid.forEach(vt => vt.el.classList.remove('highlight'));
+        executeMove(t);
+    }
+});
 
         function aiChooseMove(validTokens) {
     let bestScore = -9999;
@@ -487,10 +510,9 @@ const sleep = ms => new Promise(resolve => {
     return bestToken;
 }
 
-  async function executeMove(t) {
+async function executeMove(t) {
     state = 'animating';
 
-    // glow effect start
     t.el.classList.add("glow");
 
     if (t.state === 'base') {
@@ -499,6 +521,7 @@ const sleep = ms => new Promise(resolve => {
 
         playSound('move');
         updateTokenVisuals();
+
         await sleep(300);
 
     } else {
@@ -514,7 +537,6 @@ const sleep = ms => new Promise(resolve => {
         }
     }
 
-    // glow remove
     t.el.classList.remove("glow");
 
     await checkInteractions(t);
@@ -522,29 +544,39 @@ const sleep = ms => new Promise(resolve => {
 
         async function checkInteractions(t) {
             if (t.relPos === 56) {
-                logMsg(`Destination reached.`);
-                playSound('win'); 
+            logMsg(`Destination reached.`);
+            playSound('win'); 
+            vibrate('win'); // ✅ added
 
-                const pos = getTokenScreenPosition(t);
-                createParticles(pos.x, pos.y, HEX[t.color]);
-                extraTurnGranted = true;
+            const pos = getTokenScreenPosition(t);
+            createParticles(pos.x, pos.y, HEX[t.color]);
+            extraTurnGranted = true;
 
-                await sleep(800); checkPlayerFinish(t.color);
-            } 
+            await sleep(800); 
+            checkPlayerFinish(t.color);
+        }
             else if (t.state === 'track') {
                 const currentCoords = getTokenCoords(t).join(',');
                 if (!safeZones.includes(currentCoords)) {
                     let cuts = tokens.filter(ot => ot.color !== t.color && ot.state === 'track' && getTokenCoords(ot).join(',') === currentCoords);
                     if (cuts.length > 0) {
-                        cuts.forEach(ot => { ot.state = 'base'; ot.relPos = -1; });
-                        logMsg(`${t.color.toUpperCase()} unit captured.`);
-                        playSound('cut');
+                cuts.forEach(ot => { 
+                    ot.state = 'base'; 
+                    ot.relPos = -1; 
+                });
 
-                        // 💥 PARTICLE EFFECT
-                        const pos = getTokenScreenPosition(t);
-                        createParticles(pos.x, pos.y, HEX[t.color]);
-                        extraTurnGranted = true;
-                        updateTokenVisuals(); await sleep(800);
+                logMsg(`${t.color.toUpperCase()} unit captured.`);
+                playSound('cut');
+                vibrate('cut'); // ✅ added
+
+                const pos = getTokenScreenPosition(t);
+                createParticles(pos.x, pos.y, HEX[t.color]);
+
+                extraTurnGranted = true;
+                updateTokenVisuals();
+
+                await sleep(800);
+            
                     }
                 }
             }
