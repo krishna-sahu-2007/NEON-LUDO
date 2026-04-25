@@ -50,19 +50,15 @@ function playSound(type, token = null) {
 
 // ================== VIBRATION ==================
 function vibrate(type) {
-    if (!navigator.vibrate || !soundEnabled) return;
+    if (!navigator.vibrate) return;
 
-    let intensity = 1;
-
-    // 🎯 stronger when important
-    if (type === 'cut') intensity = 2;
-    if (type === 'win') intensity = 3;
-
-    if (type === 'step') navigator.vibrate(20 * intensity);
-    else if (type === 'move') navigator.vibrate(50 * intensity);
-    else if (type === 'dice') navigator.vibrate([80, 30, 80].map(v => v * intensity));
-    else if (type === 'cut') navigator.vibrate([120, 60, 120].map(v => v * intensity));
-    else if (type === 'win') navigator.vibrate([200, 100, 200, 100, 300].map(v => v * intensity));
+    switch(type) {
+        case 'step': navigator.vibrate(50); break;
+        case 'move': navigator.vibrate(70); break;
+        case 'dice': navigator.vibrate([50, 40, 50]); break;
+        case 'cut': navigator.vibrate([100, 50, 100]); break;
+        case 'win': navigator.vibrate([200, 100, 200]); break;
+    }
 }
 
 // ================== PAUSE ==================
@@ -354,10 +350,11 @@ const sleep = ms => new Promise(resolve => {
         }
 
         function handleDiceClick() {
-            if (state !== 'waiting') return;
-            document.getElementById('dice-btn').disabled = true;
-            rollDiceLogic();
-        }
+    if (navigator.vibrate) navigator.vibrate(50); // ✅ direct user action
+    if (state !== 'waiting') return;
+    document.getElementById('dice-btn').disabled = true;
+    rollDiceLogic();
+    }
 
         async function rollDiceLogic() {
             state = 'rolling';
