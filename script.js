@@ -22,7 +22,8 @@ const sounds = {
     move: new Audio("sounds/move.mp3"),
     step: new Audio("sounds/step.mp3"),
     cut: new Audio("sounds/cut.mp3"),
-    win: new Audio("sounds/win.mp3")
+    win: new Audio("sounds/win.mp3"),
+    home: new Audio("sound/home.mp3")
 };
 
 let masterVolume = 1;
@@ -545,7 +546,7 @@ async function executeMove(t) {
         async function checkInteractions(t) {
             if (t.relPos === 56) {
             logMsg(`Destination reached.`);
-            playSound('win'); 
+            playSound('home'); 
             vibrate('win'); // ✅ added
 
             const pos = getTokenScreenPosition(t);
