@@ -239,3 +239,78 @@
         opacity: 0;
     }
 }
+
+/* 🎚️ Volume Slider Container */
+.volume-control {
+    width: 100%;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.volume-control label {
+    font-size: 11px;
+    color: #888;
+    display: block;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+}
+
+/* 🎚️ Slider Base */
+#volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 20px;
+    background: linear-gradient(to right, #0ea5e9 var(--val, 100%), #222 var(--val, 100%));
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* 🔥 Hover glow */
+#volume-slider:hover {
+    box-shadow: 0 0 12px rgba(255,255,255,0.25);
+}
+
+/* 🎯 Chrome / Edge Thumb */
+#volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: white;
+    border: none;
+    cursor: pointer;
+    box-shadow: 
+        0 0 6px white,
+        0 0 18px #0ea5e9;
+    transition: all 0.2s ease;
+}
+
+/* 💡 Thumb hover */
+#volume-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.25);
+    box-shadow: 
+        0 0 10px white,
+        0 0 30px #0ea5e9;
+}
+
+/* 🎯 Firefox Thumb */
+#volume-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: white;
+    border: none;
+    cursor: pointer;
+}
+
+/* 🎚️ Firefox Track */
+#volume-slider::-moz-range-track {
+    background: linear-gradient(90deg, #111, #222);
+    height: 6px;
+    border-radius: 20px;
+}
+
