@@ -60,7 +60,7 @@ function playSound(type) {
     if (type === "win") volume = 1.0;
 
     audio.volume = Math.min(volume * masterVolume, 1);
-    audio.play().catch(() => {});
+    audio.play().catch(err => console.log(type + " sound failed:", err));
 }
 
 // ================== VIBRATION ==================
@@ -290,7 +290,7 @@ const sleep = ms => new Promise(resolve => {
 
        window.startGame = function() {
        if (soundEnabled && bgMusicEnabled) {
-            bgMusic.play().catch(() => {});
+            bgMusic.play().catch(err => console.log("BG music failed:", err));
         }
             players = []; tokens = [];
             COLORS.forEach(color => {
