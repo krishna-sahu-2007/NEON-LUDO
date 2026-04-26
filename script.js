@@ -28,25 +28,37 @@ const sounds = {
 
 let masterVolume = 1;
 
-const slider = document.getElementById("volume-slider");
+window.addEventListener("DOMContentLoaded", () => {
+    const slider = document.getElementById("volume-slider");
 
-if (slider) {
-    slider.addEventListener("input", (e) => {
-        masterVolume = parseFloat(e.target.value);
+    if (slider) {
+        slider.style.setProperty("--val", "100%");
 
-        // 🎨 update slider fill (for neon effect)
-        slider.style.setProperty('--val', (masterVolume * 100) + '%');
-    });
-}
+        slider.addEventListener("input", (e) => {
+            masterVolume = parseFloat(e.target.value);
 
-function playSound(type, token = null) {
+            bgMusic.volume = 0.4 * masterVolume;
+            slider.style.setProperty("--val", (masterVolume * 100) + "%");
+        });
+    }
+});
+
+function playSound(type) {
     if (isPaused || !soundEnabled) return;
     if (!sounds[type]) return;
 
     const audio = sounds[type].cloneNode();
 
-    audio.volume = (type === 'step' ? 0.8 : 1) * masterVolume;
-    audio.volume = (type === 'move' ? 0.9 : 1) * masterVolume;
+    let volume = 1;
+
+    if (type === "step") volume = 0.9;
+    if (type === "move") volume = 1.0;
+    if (type === "home") volume = 1.0;
+    if (type === "dice") volume = 0.9;
+    if (type === "cut") volume = 1.0;
+    if (type === "win") volume = 1.0;
+
+    audio.volume = Math.min(volume * masterVolume, 1);
     audio.play().catch(() => {});
 }
 
@@ -70,6 +82,10 @@ function vibrate(type) {
 
             case 'cut':
                 navigator.vibrate([150, 70, 150]); // 💥 strong hit
+                break;
+
+            case 'home':
+                navigator.vibrate([150, 100, 150]);
                 break;
 
             case 'win':
@@ -544,10 +560,10 @@ async function executeMove(t) {
 }
 
         async function checkInteractions(t) {
-            if (t.relPos === 56) {
-            logMsg(`Destination reached.`);
-            playSound('home'); 
-            vibrate('win'); // ✅ added
+        if (t.relPos === 56) {
+            logMsg(`Token reached home!`);
+            playSound('home');
+            vibrate('win');
 
             const pos = getTokenScreenPosition(t);
             createParticles(pos.x, pos.y, HEX[t.color]);
