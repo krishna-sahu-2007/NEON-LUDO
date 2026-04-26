@@ -2,9 +2,9 @@
   "name": "Ludo Neon Game",
   "short_name": "Ludo Neon",
   "start_url": "./",
-  "display": "standalone",
+  "display": "fullscreen",   // 🔥 removes top bar completely
   "background_color": "#000000",
-  "theme_color": "#0ea5e9",
+  "theme_color": "#000000",
   "orientation": "portrait",
   "icons": [
     {
