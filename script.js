@@ -13,7 +13,7 @@ let bgMusicEnabled = true;
 // 🎵 Background Music
 const bgMusic = new Audio("sounds/bg.mp3");
 bgMusic.loop = true;
-bgMusic.volume = 0.4;
+bgMusic.volume = 0.2;
 
 // ================== SOUNDS ==================
 const sounds = {
@@ -53,7 +53,7 @@ function playSound(type) {
     let volume = 1;
 
     if (type === "step") volume = 0.9;
-    if (type === "move") volume = 1.0;
+    if (type === "move") volume = 1.3;
     if (type === "home") volume = 1.0;
     if (type === "dice") volume = 0.9;
     if (type === "cut") volume = 1.0;
