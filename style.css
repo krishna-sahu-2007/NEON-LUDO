@@ -314,3 +314,93 @@
     border-radius: 20px;
 }
 
+/* 🌌 Full page setup background */
+body {
+    background:
+        linear-gradient(rgba(0,0,0,0.72), rgba(0,0,0,0.88)),
+        url("images/setup-bg.jpg") center / cover no-repeat fixed;
+}
+
+/* 🧊 Premium setup card */
+#setup-screen {
+    position: relative;
+    overflow: hidden;
+    padding: 36px;
+    background: rgba(5, 5, 8, 0.72) !important;
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow:
+        0 0 35px rgba(14,165,233,0.18),
+        0 0 70px rgba(255,42,95,0.12),
+        inset 0 0 30px rgba(255,255,255,0.03);
+    animation: setupFloat 4s ease-in-out infinite;
+}
+
+/* ✨ moving neon shine */
+#setup-screen::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(
+        120deg,
+        transparent 25%,
+        rgba(255,255,255,0.08),
+        transparent 75%
+    );
+    transform: translateX(-100%);
+    animation: shineMove 5s infinite;
+    pointer-events: none;
+}
+
+/* keep content above shine */
+#setup-screen > * {
+    position: relative;
+    z-index: 2;
+}
+
+/* 🔥 stronger title glow */
+#setup-screen h1 {
+    text-shadow:
+        0 0 10px rgba(255,255,255,0.45),
+        0 0 25px rgba(14,165,233,0.25);
+}
+
+/* 🎮 player cards glow */
+.color-card {
+    box-shadow:
+        0 0 18px rgba(255,255,255,0.04),
+        inset 0 0 18px rgba(255,255,255,0.025);
+}
+
+/* 🚀 enter button premium glow */
+#setup-screen button {
+    box-shadow:
+        0 0 18px rgba(255,255,255,0.25),
+        0 0 35px rgba(14,165,233,0.16);
+}
+
+#setup-screen button:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow:
+        0 0 25px rgba(255,255,255,0.45),
+        0 0 55px rgba(14,165,233,0.28);
+}
+
+/* animations */
+@keyframes setupFloat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+@keyframes shineMove {
+    0% {
+        transform: translateX(-120%);
+    }
+    45%, 100% {
+        transform: translateX(120%);
+    }
+}
