@@ -7,12 +7,14 @@ const FILES_TO_CACHE = [
   "./script.js",
   "./manifest.json",
   "./controller.js",
+  "./preview.js",
   "./sounds/dice.mp3",
   "./sounds/move.mp3",
   "./sounds/step.mp3",
   "./sounds/cut.mp3",
   "./sounds/win.mp3",
   "./sounds/bg.mp3"
+
 ];
 
 self.addEventListener("install", event => {
