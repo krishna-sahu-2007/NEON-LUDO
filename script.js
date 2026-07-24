@@ -230,6 +230,53 @@ function openSettingsFromPause(){
 
 }
 
+function exitToMenu() {
+
+    // Close all overlays
+    isPaused = false;
+
+    document.getElementById("pause-screen")
+        .classList.add("hidden");
+
+    document.getElementById("settings-modal")
+        .classList.add("hidden");
+
+    // Hide game
+    document.getElementById("game-screen")
+        .classList.add("hidden");
+
+    document.getElementById("result-screen")
+        .classList.add("hidden");
+
+    // Show setup
+    document.getElementById("setup-screen")
+        .classList.remove("hidden");
+
+    // Stop music
+    bgMusic.pause();
+    bgMusic.currentTime = 0;
+
+    // Reset game state
+    players = [];
+    tokens = [];
+    ranks = [];
+    turnIndex = 0;
+    currentDice = 0;
+    extraTurnGranted = false;
+    diceLocked = false;
+    state = "waiting";
+
+    // Clear board
+    document.getElementById("board").innerHTML = "";
+    document.getElementById("tokens-layer").innerHTML = "";
+    document.getElementById("rankings-list").innerHTML =
+        "<li class='italic text-slate-700'>Arena empty.</li>";
+
+    document.getElementById("game-log").innerText = "Initializing...";
+
+    // Reset pause state
+    pauseFocus = 0;
+}
 // ================== SOUND TOGGLE ==================
 function toggleSound() {
     soundEnabled = !soundEnabled;
