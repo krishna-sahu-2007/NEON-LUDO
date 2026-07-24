@@ -1,3 +1,13 @@
+//============== Service-Worker ==================
+if ("serviceWorker" in navigator) {
+
+    navigator.serviceWorker
+        .register("sw.js")
+        .then(() => console.log("✅ Service Worker Registered"))
+        .catch(err => console.error(err));
+
+}
+
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 document.addEventListener("click", () => {
     if (audioCtx.state === 'suspended') {
