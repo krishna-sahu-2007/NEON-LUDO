@@ -643,7 +643,7 @@ body {
 /* 🧊 Premium setup card */
 #setup-screen {
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     padding: 36px;
     background: rgba(5, 5, 8, 0.72) !important;
     backdrop-filter: blur(14px);
