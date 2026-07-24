@@ -3,52 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-   
+    <title>Ludo Game</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="images/icon.svg?v=5"/>
-
-        <link rel="manifest" href="manifest.json">
-
-<!-- 🔥 Title -->
- <title>Ludo Neon</title>
-
-<!-- 📱 SEO -->
-<meta name="title" content="Ludo Neon: Arena">
-<meta name="description" content="Play Ludo Neon: Arena – a modern neon-style Ludo game with AI, smooth animations, and immersive gameplay.">
-
-<!-- 🌐 Open Graph (for WhatsApp, Instagram, etc.) -->
-<meta property="og:type" content="website">
-<meta property="og:title" content="Ludo Neon: Arena">
-<meta property="og:description" content="Experience Ludo like never before with neon visuals and smooth gameplay.">
-<meta property="og:image" content="https://krishnaxeditzs.github.io/ludo-neon/preview.jpg">
-<meta property="og:url" content="https://krishnaxeditzs.github.io/ludo-neon/">
-
-<!-- 🐦 Twitter -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Ludo Neon: Arena">
-<meta name="twitter:description" content="Play a stunning neon version of Ludo with AI and smooth gameplay.">
-<meta name="twitter:image" content="https://krishnaxeditzs.github.io/ludo-neon/preview.jpg">
-
-<!-- 🎨 Theme -->
-<meta name="theme-color" content="#000000">
-
-
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9292376897272483"
-     crossorigin="anonymous"></script>
-    
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js");
-}
-</script>
+    <link rel="icon" href="images/icon.svg" />
 
 </head>
-    
 <body class="flex flex-col items-center justify-center min-h-screen p-4">
 
     <!-- Screen 1: Setup -->
@@ -95,10 +55,20 @@ if ("serviceWorker" in navigator) {
         </div>
         
         <p id="setup-err" class="text-red-400 text-sm mt-4 text-center hidden">Need at least 2 players!</p>
-        <button onclick="startGame()" class="w-full mt-8 bg-white text-black hover:bg-zinc-200 font-black py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] uppercase tracking-widest">
-            ENTER THE ARENA
-        </button>
+        <div class="mt-8 space-y-3">
+
+                <button id="open-settings-btn"
+                    class="w-full bg-[#111] border border-zinc-700 hover:border-cyan-400 text-white font-bold py-3 rounded-xl transition-all">
+                    ⚙ SETTINGS
+                </button>
+
+                <button id="enter-arena" onclick="startGame()"
+                    class="w-full bg-white text-black hover:bg-zinc-200 font-black py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] uppercase tracking-widest">
+                    ▶ ENTER THE ARENA
+    </button>
+
     </div>
+</div>
 
     <!-- Screen 2: Game -->
     <div id="game-screen" class="hidden w-full max-w-5xl flex flex-col lg:flex-row gap-8 items-center justify-center">
@@ -127,22 +97,11 @@ if ("serviceWorker" in navigator) {
                 <span class="font-black text-xs tracking-widest text-slate-400 group-hover:text-white">ROLL SYSTEM</span>
             </button>
 
-            <div class="volume-control">
-    <label>VOLUME</label>
-    <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="1">
-</div>
-
-            <button onclick="togglePause()" class="w-full mb-3 bg-yellow-400 text-black font-bold py-2 rounded-xl">
-            ⏸️ PAUSE
-            </button>
-
-         <button id="sound-btn" onclick="toggleSound()" class="w-full mb-4 bg-white text-black font-bold py-2 rounded-xl">
-            🔊 SOUND   ON
-         </button>
-
-            <button id="bgm-btn" onclick="toggleBGM()" class="game-btn w-full mb-4 bg-black text-cyan-400 font-bold py-2 rounded-xl">
-    🎵 MUSIC ON
-</button>
+                <button id="menu-btn"
+                onclick="togglePause()"
+                class="w-full mb-4 bg-[#111] border border-zinc-700 hover:border-cyan-400 text-white font-bold py-3 rounded-xl transition-all">
+                    ⚙ MENU
+                </button>
 
             <!-- Rankings -->
             <div class="w-full bg-[#050505] border border-[#27272a] rounded-xl p-4">
@@ -165,23 +124,132 @@ if ("serviceWorker" in navigator) {
         <p class="text-slate-500 mb-8 uppercase tracking-widest text-xs">Battle Finalized</p>
         <div id="final-rankings" class="space-y-3 mb-8"></div>
         <button onclick="location.reload()" class="w-full bg-white text-black font-black py-4 rounded-xl hover:bg-zinc-200 transition-colors">
-            NEW GAME
+            NEW SIMULATION
         </button>
     </div>
 
     <script src="script.js" defer></script>
+    <script src="controller.js" defer></script>
+    <div id="settings-modal"
+     class="hidden fixed inset-0 z-50 flex items-center justify-center">
 
-    <div id="pause-screen" class="hidden fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-50">
-    <h1 class="text-3xl text-white font-black mb-6">PAUSED</h1>
+    <div class="settings-backdrop"></div>
 
-    <button onclick="togglePause()" class="mb-4 px-6 py-3 bg-white text-black rounded-xl font-bold">
-        RESUME
-    </button>
+    <div class="settings-panel">
+<h2>GAME SETTINGS</h2>
 
-    <button onclick="location.reload()" class="px-6 py-3 bg-red-500 text-white rounded-xl font-bold">
-        EXIT GAME
-    </button>
+<div class="settings-section">
+
+    <h3>🎨 VISUAL</h3>
+
+    <label><span>Turn Aura</span>
+    <input id="turn-aura-setting" type="checkbox" checked>
+    </label>
+
+    <label><span>Token Trail</span>
+    <input id="trail-setting" type="checkbox" checked>
+    </label>
+
+    <label><span>Particles</span>
+    <input id="particles-setting" type="checkbox" checked>
+    </label>
+
+    <label><span>Capture FX</span>
+    <input id="capture-setting" type="checkbox" checked>
+    </label>
+
+    <label><span>Winner Celebration</span>
+    <input id="winner-setting" type="checkbox" checked>
+    </label>
+
+</div>
+
+<hr class="settings-divider">
+
+<div class="settings-section">
+
+    <h3>🔊 AUDIO</h3>
+
+    <div class="setting-slider">
+        <span>Master Volume</span>
+        <input
+    id="master-volume"
+    type="range"
+    min="0"
+    max="100"
+    value="100">
     </div>
+
+    <div class="setting-slider">
+        <span>Music</span>
+        <input
+    id="music-volume"
+    type="range"
+    min="0"
+    max="100"
+    value="80">
+    </div>
+
+    <div class="setting-slider">
+        <span>Effects</span>
+        <input
+    id="effects-volume"
+    type="range"
+    min="0"
+    max="100"
+    value="100">
+    </div>
+
+    <label>
+        <span>Background Music</span>
+        <input id="bg-music-setting" type="checkbox" checked>
+    </label>
+
+    <label>
+        <span>Sound Effects</span>
+        <input id="sound-setting" type="checkbox" checked>
+    </label>
+
+</div>
+
+<button id="close-settings-btn">
+    CLOSE
+</button>
+
+    </div>
+
+</div>
+<div id="pause-screen" class="hidden fixed inset-0 flex items-center justify-center z-50">
+
+    <div class="pause-backdrop"></div>
+
+    <div class="pause-panel">
+
+        <h2>GAME PAUSED</h2>
+
+        <div class="pause-buttons">
+
+            <button id='pause-resume-btn' class="pause-btn resume" onclick="togglePause()">
+                ▶ RESUME
+            </button>
+
+            <button id="pause-settings-btn" class="pause-settings-btn" onclick="openSettingsFromPause()">
+                ⚙ SETTINGS
+            </button>
+
+            <button id="pause-restart-btn" class="pause-restart-btn" onclick="location.reload()">
+                ↻ RESTART MATCH
+            </button>
+
+            <button id="pause-exit-btn" class="pause-exit-btn" onclick="exitToMenu()">
+                🏠 EXIT TO MENU
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
 
 </body>
 </html>

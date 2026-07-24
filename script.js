@@ -8,12 +8,26 @@ document.addEventListener("click", () => {
 // ================== GLOBAL SETTINGS ==================
 let isPaused = false;
 let soundEnabled = true;
-let bgMusicEnabled = true;
+let diceLocked = false;
+const gameSettings = {
+
+    turnAura: true,
+
+    tokenTrail: true,
+
+    particles: true,
+
+    captureFX: true,
+
+    winnerFX: true
+
+};
+const settingsModal = document.getElementById("settings-modal");
 
 // 🎵 Background Music
 const bgMusic = new Audio("sounds/bg.mp3");
 bgMusic.loop = true;
-bgMusic.volume = 0.2;
+bgMusic.volume = 0.4;
 
 // ================== SOUNDS ==================
 const sounds = {
@@ -23,52 +37,132 @@ const sounds = {
     move: new Audio("sounds/move.mp3"),
     step: new Audio("sounds/step.mp3"),
     cut: new Audio("sounds/cut.mp3"),
-    win: new Audio("sounds/win.mp3"),
-    home: new Audio("sounds/home.mp3")
+    win: new Audio("sounds/win.mp3")
 };
 
 let masterVolume = 1;
+let musicVolume = 0.4;
+let effectsVolume = 1;
 
 window.addEventListener("DOMContentLoaded", () => {
-    const slider = document.getElementById("volume-slider");
 
-    if (slider) {
-        slider.style.setProperty("--val", "100%");
+    const master = document.getElementById("master-volume");
+    const music = document.getElementById("music-volume");
+    const effects = document.getElementById("effects-volume");
+    const bgMusicToggle = document.getElementById("bg-music-setting");
+const soundToggle = document.getElementById("sound-setting");
 
-        slider.addEventListener("input", (e) => {
-            masterVolume = parseFloat(e.target.value);
+if(bgMusicToggle){
 
-            bgMusic.volume = 0.4 * masterVolume;
-            slider.style.setProperty("--val", (masterVolume * 100) + "%");
+    bgMusicToggle.addEventListener("change",()=>{
+
+        if(bgMusicToggle.checked){
+
+            bgMusic.volume = masterVolume * musicVolume;
+
+            if(!isPaused){
+                bgMusic.play().catch(()=>{});
+            }
+
+        }else{
+
+            bgMusic.pause();
+
+        }
+
+    });
+
+}
+
+if(soundToggle){
+
+    soundToggle.addEventListener("change",()=>{
+
+        soundEnabled = soundToggle.checked;
+
+    });
+
+}
+
+    if(master){
+
+        master.addEventListener("input",()=>{
+
+            masterVolume = master.value / 100;
+
+            bgMusic.volume = masterVolume * musicVolume;
+
         });
+
     }
+
+    if(music){
+
+        music.addEventListener("input",()=>{
+
+            musicVolume = music.value / 100;
+
+            bgMusic.volume = masterVolume * musicVolume;
+
+        });
+
+    }
+
+    if(effects){
+
+        effects.addEventListener("input",()=>{
+
+            effectsVolume = effects.value / 100;
+
+        });
+
+    }
+
+const controls = [
+
+    ["trail-setting","tokenTrail"],
+    ["turn-aura-setting","turnAura"],
+    ["particles-setting","particles"],
+    ["capture-setting","captureFX"],
+    ["winner-setting","winnerFX"]
+
+];
+
+controls.forEach(([id,key])=>{
+
+    const checkbox = document.getElementById(id);
+
+    if(!checkbox) return;
+
+    checkbox.checked = gameSettings[key];
+
+    checkbox.addEventListener("change",()=>{
+
+        gameSettings[key] = checkbox.checked;
+
+        if(key === "turnAura"){
+            updateTurnAura();
+        }
+
+    });
+
 });
 
-function playSound(type) {
+});
+
+function playSound(type, token = null) {
     if (isPaused || !soundEnabled) return;
     if (!sounds[type]) return;
 
-    let audio;
+    const audio = sounds[type].cloneNode();
 
-    if (type === "step") {
-        audio = sounds[type];
-        audio.currentTime = 0;
-    } else {
-        audio = sounds[type].cloneNode();
+    audio.volume =
+        (type === "step" ? 0.8 : 1)
+        * masterVolume
+        * effectsVolume;
+
+    audio.play().catch(()=>{});
     }
-
-    let volume = 1;
-
-    if (type === "step") volume = 0.9;
-    if (type === "move") volume = 1.3;
-    if (type === "home") volume = 1.0;
-    if (type === "dice") volume = 0.9;
-    if (type === "cut") volume = 1.0;
-    if (type === "win") volume = 1.0;
-
-    audio.volume = Math.min(volume * masterVolume, 1);
-    audio.play().catch(err => console.log(type + " sound failed:", err));
-}
 
 // ================== VIBRATION ==================
 function vibrate(type) {
@@ -92,10 +186,6 @@ function vibrate(type) {
                 navigator.vibrate([150, 70, 150]); // 💥 strong hit
                 break;
 
-            case 'home':
-                navigator.vibrate([150, 100, 150]);
-                break;
-
             case 'win':
                 navigator.vibrate([200, 100, 200, 100, 300]); // 🏆 very strong
                 break;
@@ -115,11 +205,29 @@ function togglePause() {
     } else {
         pauseScreen.classList.add('hidden');
        document.body.addEventListener('click', () => {
-    if (soundEnabled && bgMusicEnabled) {
-    bgMusic.play().catch(() => {});
+    if (soundEnabled &&
+    document.getElementById("bg-music-setting").checked){
+
+    bgMusic.play();
+
 }
     }, { once: true });
     }
+}
+
+function openSettingsFromPause(){
+
+    settingsSource = "pause";
+
+    settingsFocus = 0;
+    updateSettingsFocus();
+
+    document.getElementById("pause-screen")
+        .classList.add("hidden");
+
+    document.getElementById("settings-modal")
+        .classList.remove("hidden");
+
 }
 
 // ================== SOUND TOGGLE ==================
@@ -130,29 +238,9 @@ function toggleSound() {
 
     if (soundEnabled) {
         btn.innerText = "🔊 SOUND ON";
-
-        if (bgMusicEnabled) {
-            bgMusic.play().catch(() => {});
-        }
+        bgMusic.play();
     } else {
         btn.innerText = "🔇 SOUND OFF";
-        bgMusic.pause();
-    }
-}
-
-function toggleBGM() {
-    bgMusicEnabled = !bgMusicEnabled;
-
-    const btn = document.getElementById("bgm-btn");
-
-    if (bgMusicEnabled) {
-        btn.innerText = "🎵 MUSIC ON";
-
-        if (soundEnabled) {
-            bgMusic.play().catch(() => {});
-        }
-    } else {
-        btn.innerText = "🚫 MUSIC OFF";
         bgMusic.pause();
     }
 }
@@ -254,12 +342,15 @@ const sleep = ms => new Promise(resolve => {
                 cell.style.boxShadow = `0 0 10px rgba(0,0,0,0.5), inset 0 0 15px var(--neon-${color}44)`;
             }
         }
-            function createParticles(x, y, color) {
-    const container = document.getElementById("tokens-layer");
+        function createParticles(x, y, color) {
+            if(!gameSettings.particles)
+    return;
+             const container = document.getElementById("tokens-layer");
 
     for (let i = 0; i < 8; i++) {
         const p = document.createElement("div");
         p.className = "particle";
+
 
         // 🎨 color
         p.style.background = color;
@@ -285,6 +376,42 @@ const sleep = ms => new Promise(resolve => {
     }
 }
 
+            // Trail
+            function createTrail(token){
+                    if(!gameSettings.tokenTrail)
+        return;
+            const trail = document.createElement("div");
+
+    trail.className = `token-trail ${token.color}`;
+
+    trail.style.left = token.el.style.left;
+    trail.style.top  = token.el.style.top;
+    trail.style.transform = token.el.style.transform;
+
+    document
+        .getElementById("tokens-layer")
+        .appendChild(trail);
+
+    trail.addEventListener("animationend",()=>{
+
+        trail.remove();
+
+    });
+
+}
+
+function startMotion(token){
+
+    token.el.classList.add("moving");
+
+}
+
+        function stopMotion(token){
+
+    token.el.classList.remove("moving");
+
+}
+
         function getTokenScreenPosition(t) {
     const rect = t.el.getBoundingClientRect();
     const parentRect = document.getElementById("tokens-layer").getBoundingClientRect();
@@ -296,9 +423,7 @@ const sleep = ms => new Promise(resolve => {
 }
 
        window.startGame = function() {
-       if (soundEnabled && bgMusicEnabled) {
-            bgMusic.play().catch(err => console.log("BG music failed:", err));
-        }
+        if (soundEnabled) bgMusic.play();
             players = []; tokens = [];
             COLORS.forEach(color => {
                 const type = document.getElementById(`p-${color}`).value;
@@ -317,8 +442,14 @@ const sleep = ms => new Promise(resolve => {
             document.getElementById('game-screen').classList.remove('hidden');
             generateBoard();
             createTokensDom();
+            if(typeof Haptics !== "undefined"){
+
+    Haptics.startGame();
+
+}
             updateTokenVisuals();
             turnIndex = 0;
+            updateTurnAura();
             state = 'waiting';
             startTurn();
         }
@@ -327,11 +458,34 @@ const sleep = ms => new Promise(resolve => {
             const layer = document.getElementById('tokens-layer');
             layer.innerHTML = '';
             tokens.forEach(t => {
-                const div = document.createElement('div');
-                div.className = `token ${t.color}`;
-                div.id = `token-${t.id}`;
-                layer.appendChild(div);
-                t.el = div;
+                const token = document.createElement("div");
+
+                token.className = `token ${t.color}`;
+
+                token.id = `token-${t.id}`;
+
+                token.innerHTML = `
+                    <div class="token-core">
+
+                        <div class="token-ring"></div>
+
+                        <div class="token-body"></div>
+
+                        <div class="selection-corners">
+
+                            <span class="tl"></span>
+                            <span class="tr"></span>
+                            <span class="bl"></span>
+                            <span class="br"></span>
+
+                        </div>
+
+                    </div>
+                    `;
+
+                layer.appendChild(token);
+
+                t.el = token;
             });
         }
 
@@ -388,10 +542,37 @@ const sleep = ms => new Promise(resolve => {
         }
 
         function logMsg(msg) { document.getElementById('game-log').innerText = msg; }
+        function createRipple(event) {
+
+    const btn = event.currentTarget;
+
+    const ripple = document.createElement("span");
+    ripple.className = "ripple";
+
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+
+    ripple.style.width = size + "px";
+    ripple.style.height = size + "px";
+
+    ripple.style.left =
+        (event.clientX - rect.left) + "px";
+
+    ripple.style.top =
+        (event.clientY - rect.top) + "px";
+
+    btn.appendChild(ripple);
+
+    ripple.addEventListener("animationend", () => {
+        ripple.remove();
+    });
+
+}
 
         async function startTurn() {
             if (isGameOver()) return;
             let cp = players[turnIndex];
+            updateTurnAura();
             if (cp.finished) {
                 turnIndex = (turnIndex + 1) % players.length;
                 return startTurn();
@@ -415,32 +596,62 @@ const sleep = ms => new Promise(resolve => {
             } else { logMsg(`Ready to roll.`); }
         }
 
-            function handleDiceClick() {
-                vibrate('dice'); // ✅ FIXED (was manual vibrate before)
+            function handleDiceClick(){
 
-                if (state !== 'waiting') return;
-                document.getElementById('dice-btn').disabled = true;
+                if(diceLocked)
+                    return;
+
+                if(state !== "waiting")
+                    return;
+
+                 if(players[turnIndex].type === "ai")
+                    return;
+
+                diceLocked = true;
+
+                state = "rolling";
+
+                vibrate("dice");
+
+                document.getElementById("dice-btn").disabled = true;
+
                 rollDiceLogic();
+
             }
 
         async function rollDiceLogic() {
-            state = 'rolling';
             playSound('dice');
-            let rolls = 10;
+            let rolls = 8;
             const diceFaces = [[4], [0,8], [0,4,8], [0,2,6,8], [0,2,4,6,8], [0,2,3,5,6,8]];
             const diceEl = document.getElementById('dice-visual');
+            diceEl.classList.remove("roll-animation");
+
+            // restart animation
+            void diceEl.offsetWidth;
+
+            diceEl.classList.add("roll-animation");
             const dots = diceEl.querySelectorAll('.dot');
             for(let i=0; i<rolls; i++) {
                 let v = Math.floor(Math.random()*6) + 1;
                 renderDice(v, dots, diceFaces);
-                await sleep(50);
+                await sleep(30);
             }
             const cp = players[turnIndex];
 
-            currentDice = Math.floor(Math.random() * 6) + 1;
+if(window.debugForcedDice){
+
+    currentDice = window.debugForcedDice;
+    window.debugForcedDice = null;
+
+}else{
+
+    currentDice = Math.floor(Math.random() * 6) + 1;
+
+}
             renderDice(currentDice, dots, diceFaces);
             logMsg(`Rolled a ${currentDice}.`);
-            await sleep(500);
+            await sleep(220);
+            diceEl.classList.remove("roll-animation");
             if (currentDice === 6 || currentDice === 1) extraTurnGranted = true;
             processMoves();
         }
@@ -451,31 +662,73 @@ const sleep = ms => new Promise(resolve => {
         }
 
         function getValidTokens(player) {
-            let pTokens = tokens.filter(t => t.color === player.color);
-            return pTokens.filter(t => {
-                if (t.state === 'base') return currentDice === 6;
-                if (t.state === 'track' || t.state === 'home') return (t.relPos + currentDice) <= 56;
-                return false;
-            });
-        }
+
+    let pTokens = tokens.filter(t => t.color === player.color);
+
+    const valid = pTokens.filter(t => {
+
+        if (t.state === 'base')
+            return currentDice === 6;
+
+        if (t.state === 'track' || t.state === 'home')
+            return (t.relPos + currentDice) <= 56;
+
+        return false;
+
+    });
+
+    // 🌉 Make valid tokens available globally
+    window.validControllerTokens = valid;
+
+    return valid;
+
+}
 
         async function processMoves() {
             let cp = players[turnIndex];
             let valid = getValidTokens(cp);
+            selectedTokenIndex = 0;
+
+            refreshSelectableTokens();
+
             if (valid.length === 0) {
-                logMsg(`No moves available.`);
+
+                logMsg("No moves available.");
                 await sleep(1000);
                 endTurn();
                 return;
+
             }
-            if (valid.length === 1 && cp.type === 'human') { executeMove(valid[0]); return; }
-            if (cp.type === 'human') {
-                state = 'selecting';
-                logMsg(`Choose a unit.`);
-                valid.forEach(t => t.el.classList.add('highlight'));
+
+            if (valid.length === 1 && cp.type === "human") {
+
+                executeMove(valid[0]);
+                return;
+
+            }
+
+            if (cp.type === "human") {
+
+                state = "selecting";
+
+                logMsg("Choose a unit.");
+
+                valid.forEach(t => t.el.classList.add("highlight"));
+
+                window.validControllerTokens = valid;
+
+                selectedTokenIndex = 0;
+
+                if (gamepad) {
+                    updateControllerHighlight();
+                }
+
             } else {
-                state = 'animating';
+
+                state = "animating";
+
                 executeMove(aiChooseMove(valid));
+
             }
         }
 
@@ -496,66 +749,59 @@ const sleep = ms => new Promise(resolve => {
     }
 });
 
-function aiChooseMove(validTokens) {
+        function aiChooseMove(validTokens) {
+    let bestScore = -9999;
     let bestToken = validTokens[0];
-    let bestScore = -999999;
 
     for (let t of validTokens) {
         let score = 0;
-        let targetRel = (t.state === "base") ? 0 : t.relPos + currentDice;
 
-        // 1. Finish token first
-        if (targetRel === 56) score += 500;
+        let targetRel = (t.state === 'base') ? 0 : t.relPos + currentDice;
 
-        // 2. Bring token out only if useful
-        if (t.state === "base") {
-            score += 80;
+        // 🚀 ENTER BOARD
+        if (t.state === 'base') score += 60;
 
-            // If AI already has tokens outside, don't always open new one
-            let outside = tokens.filter(x => x.color === t.color && x.state !== "base" && x.relPos < 56);
-            if (outside.length >= 2) score -= 30;
-        }
+        // 🏁 FINISH PRIORITY
+        if (targetRel === 56) score += 200;
 
-        // 3. Kill opponent
-        let targetCoords = null;
+        // 📍 POSITION CALC
+        let coords = null;
         let isSafe = false;
 
         if (targetRel <= 50) {
             let absIdx = (startOffsets[t.color] + targetRel) % 52;
-            targetCoords = mainTrack[absIdx].join(",");
-            isSafe = safeZones.includes(targetCoords);
+            coords = mainTrack[absIdx].join(',');
+            isSafe = safeZones.includes(coords);
         }
 
-        let victims = tokens.filter(ot =>
+        // 🩸 KILL BONUS (VERY HIGH)
+        let canKill = tokens.some(ot =>
             ot.color !== t.color &&
-            ot.state === "track" &&
-            targetCoords &&
-            getTokenCoords(ot).join(",") === targetCoords &&
+            ot.state === 'track' &&
+            getTokenCoords(ot).join(',') === coords &&
             !isSafe
         );
 
-        if (victims.length > 0) score += 350 * victims.length;
+        if (canKill) score += 150;
 
-        // 4. Safe zone is valuable
-        if (isSafe) score += 120;
+        // 🛡 SAFE ZONE BONUS
+        if (isSafe) score += 40;
 
-        // 5. Avoid landing in danger
-        let danger = isSquareDangerous(t.color, targetRel);
-        if (danger) score -= 220;
+        // ⚠️ DANGER CHECK (enemy nearby)
+        let danger = tokens.some(ot => {
+            if (ot.color === t.color || ot.state !== 'track') return false;
 
-        // 6. Escape if current token is already in danger
-        if (t.state !== "base" && isSquareDangerous(t.color, t.relPos)) {
-            score += 180;
-        }
+            let dist = (t.relPos - ot.relPos + 52) % 52;
+            return dist > 0 && dist <= 6;
+        });
 
-        // 7. Chase nearest human token
-        score += chaseScore(t.color, targetRel);
+        if (danger) score -= 50;
 
-        // 8. Prefer progress
-        score += targetRel * 3;
+        // 🧠 PROGRESS FORWARD
+        score += targetRel;
 
-        // 9. Small randomness so AI doesn't feel robotic
-        score += Math.random() * 8;
+        // 🎯 RANDOMNESS (avoid predictable AI)
+        score += Math.random() * 10;
 
         if (score > bestScore) {
             bestScore = score;
@@ -566,89 +812,70 @@ function aiChooseMove(validTokens) {
     return bestToken;
 }
 
-function isSquareDangerous(myColor, relPos) {
-    if (relPos < 0 || relPos > 50) return false;
-
-    let myAbs = (startOffsets[myColor] + relPos) % 52;
-    let myCoords = mainTrack[myAbs].join(",");
-
-    if (safeZones.includes(myCoords)) return false;
-
-    return tokens.some(enemy => {
-        if (enemy.color === myColor || enemy.state !== "track") return false;
-
-        for (let dice = 1; dice <= 6; dice++) {
-            let enemyTargetRel = enemy.relPos + dice;
-            if (enemyTargetRel > 50) continue;
-
-            let enemyAbs = (startOffsets[enemy.color] + enemyTargetRel) % 52;
-            let enemyCoords = mainTrack[enemyAbs].join(",");
-
-            if (enemyCoords === myCoords) return true;
-        }
-
-        return false;
-    });
-}
-
-function chaseScore(myColor, targetRel) {
-    if (targetRel < 0 || targetRel > 50) return 0;
-
-    let score = 0;
-    let myAbs = (startOffsets[myColor] + targetRel) % 52;
-
-    tokens.forEach(enemy => {
-        if (enemy.color === myColor || enemy.state !== "track") return;
-
-        let enemyAbs = (startOffsets[enemy.color] + enemy.relPos) % 52;
-
-        let distanceAhead = (enemyAbs - myAbs + 52) % 52;
-
-        if (distanceAhead > 0 && distanceAhead <= 12) {
-            score += (13 - distanceAhead) * 8;
-        }
-    });
-
-    return score;
-}
-
 async function executeMove(t) {
+    
     state = 'animating';
+    window.validControllerTokens = [];
 
-    t.el.classList.add("glow");
+        selectedTokenIndex = 0;
+
+        document
+    .querySelectorAll(".controller-selected")
+    .forEach(el=>el.classList.remove("controller-selected"));
 
     if (t.state === 'base') {
         t.state = 'track';
         t.relPos = 0;
 
         playSound('move');
+        if(typeof Haptics !== "undefined"){
+            Haptics.leaveBase();
+        }
         updateTokenVisuals();
 
         await sleep(300);
 
     } else {
+
+        startMotion(t);
+
         for (let i = 0; i < currentDice; i++) {
+
             t.relPos++;
 
-            if (t.relPos > 50) t.state = 'home';
+            if (t.relPos > 50)
+                t.state = 'home';
 
             playSound('step', t);
+
+            if(typeof Haptics !== "undefined"){
+                Haptics.step();
+            }
+
+            createTrail(t);
+
             updateTokenVisuals();
 
-            await sleep(180);
+            await sleep(170);
         }
+
+        stopMotion(t);   // <- only once after movement ends
     }
 
-    t.el.classList.remove("glow");
-
+    t.el.classList.remove("controller-selected");
+    t.el.style.zIndex = "";
+   
     await checkInteractions(t);
 }
-
+       
         async function checkInteractions(t) {
-        if (t.relPos === 56) {
-            logMsg(`Token reached home!`);
-            playSound('home');
-            vibrate('win');
+            if (t.relPos === 56) {
+            logMsg(`Destination reached.`);
+            playSound('win'); 
+            vibrate('win'); // ✅ added
+            if(typeof Haptics !== "undefined"){
+                Haptics.home();
+            }
 
             const pos = getTokenScreenPosition(t);
             createParticles(pos.x, pos.y, HEX[t.color]);
@@ -670,6 +897,9 @@ async function executeMove(t) {
                 logMsg(`${t.color.toUpperCase()} unit captured.`);
                 playSound('cut');
                 vibrate('cut'); // ✅ added
+                if(typeof Haptics !== "undefined"){
+                    Haptics.capture();
+                }
 
                 const pos = getTokenScreenPosition(t);
                 createParticles(pos.x, pos.y, HEX[t.color]);
@@ -707,6 +937,8 @@ async function executeMove(t) {
         function endTurn() {
             if (isGameOver()) return showResults();
             if (!extraTurnGranted) turnIndex = (turnIndex + 1) % players.length;
+            updateTurnAura();
+            diceLocked = false;
             startTurn();
         }
 
@@ -730,3 +962,67 @@ async function executeMove(t) {
                 </div>
             `).join('');
         }
+
+        document.querySelectorAll("button").forEach(button => {
+    button.addEventListener("click", createRipple);
+});
+
+document.getElementById("open-settings-btn")
+.addEventListener("click", () => {
+
+    settingsModal.classList.remove("hidden");
+
+});
+
+document.getElementById("close-settings-btn")
+.addEventListener("click", () => {
+
+    settingsModal.classList.add("hidden");
+
+    if(isPaused){
+        document
+            .getElementById("pause-screen")
+            .classList.remove("hidden");
+    }
+
+
+});
+
+function updateTurnAura(){
+
+    // Remove previous player's aura
+    tokens.forEach(t=>{
+
+        t.el.classList.remove(
+            "turn-active",
+            "turn-base"
+        );
+
+    });
+
+    if(!gameSettings.turnAura){
+
+        return;
+
+    }
+
+    const currentColor = players[turnIndex].color;
+
+    tokens.forEach(t=>{
+
+        if(t.color !== currentColor)
+            return;
+
+        if(t.state === "base"){
+
+            t.el.classList.add("turn-base");
+
+        }else{
+
+            t.el.classList.add("turn-active");
+
+        }
+
+    });
+
+}
